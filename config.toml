@@ -1,0 +1,239 @@
+# Fussball-Kalender: Konfiguration
+#
+# Quellenauswahl pro Kalender:
+#   Standard: Quellen der Reihe nach; die erste mit >= min_matches Spielen gewinnt,
+#             sonst die ergiebigste. Ausfaelle (404, Netzfehler) werden uebersprungen.
+#   merge = true: alle Quellen zusammenfuehren, Dubletten (Datum + Teams) entfernen.
+#             Quellen mit fallback = true nur nutzen, wenn davor nichts geladen wurde
+#             (gehoeren deshalb ans Ende der Liste).
+#   required = true: liefert keine Quelle Daten, bricht der Job ab (alter Stand bleibt online).
+#
+# Quellenarten:
+#   uefa               match.uefa.com (inoffizielle UEFA-Frontend-API, ohne Key)
+#                      only_phases / exclude_phases: Teilstrings fuer Phase/Runde
+#   openligadb         api.openligadb.de, ODbL, ohne Key, Community-gepflegt
+#   football_data      api.football-data.org, Key als Env FOOTBALL_DATA_TOKEN
+#   openfootball_json  / openfootball_txt   GitHub, Public Domain, oft ohne Uhrzeit
+#
+# Reihenfolge nach Quellen-Test vom 2026-10-26 (probe_sources.py):
+#   UEFA-API: CL 234, EL 224, Nations League 156 Spiele, 100 % mit Uhrzeit
+#   OpenLigaDB: bl1 306 und la1 380 (99-100 % Uhrzeit), ucl 144, uel2026 144, nla 48, DFBN 6
+
+[output]
+past_days = 7          # so viele Tage Vergangenheit bleiben im Feed
+base_url = ""          # z.B. https://DEINNAME.github.io/fussball-kalender (oder Env BASE_URL)
+
+# ---------------------------------------------------------------- Top-Spiele
+[top]
+title = "Fussball Top-Spiele"
+min_score = 2          # 3 = nur Kracher, 2 = auch Kern-Verein gegen starken Gegner, 1 = jedes Spiel eines Kern-Vereins
+
+# Alias-Regeln: Gross/Klein und Akzente egal. Normaler Alias = ganzes Wort im Namen.
+# "=Name" = exakter Name (UEFA nutzt Kurznamen wie "Paris" oder "Barcelona";
+# als normaler Alias wuerde "Barcelona" auch "Espanyol Barcelona" treffen).
+core = [
+  ["Paris Saint-Germain", "PSG", "Paris SG", "=Paris"],
+  ["FC Barcelona", "Barca", "=Barcelona"],
+  ["Real Madrid"],
+  ["Bayern"],
+]
+
+# Starke Gegner: Kern-Verein gegen diese Klubs zaehlt als Top-Spiel (Stufe 2)
+strong = [
+  ["Arsenal"],
+  ["Manchester City", "Man City"],
+  ["Liverpool"],
+  ["Internazionale", "Inter Milan", "Inter Mailand", "=Inter"],
+  ["Atletico Madrid", "Atletico de Madrid", "Atleti"],
+  ["Borussia Dortmund", "Dortmund", "BVB"],
+  ["Leverkusen"],
+  ["Juventus"],
+  ["AC Milan", "AC Mailand", "=Milan"],
+  ["Napoli", "SSC Neapel"],
+  ["Chelsea"],
+  ["Manchester United", "Man United", "Man Utd"],
+]
+
+# Nationalteams (Englisch fuer UEFA/openfootball, Deutsch fuer OpenLigaDB):
+# zwei davon gegeneinander = Stufe 2, WM/EM Halbfinale und Finale = Stufe 3
+national_strong = [
+  "France", "Frankreich", "Spain", "Spanien", "Germany", "Deutschland", "England",
+  "Argentina", "Argentinien", "Brazil", "Brasilien", "Portugal", "Netherlands", "Niederlande",
+  "Italy", "Italien",
+]
+
+# ---------------------------------------------------------------- Kalender
+[[calendars]]
+id = "bundesliga"
+title = "Bundesliga"
+name = "Bundesliga"
+tag = "BL"
+required = true
+[[calendars.sources]]
+kind = "openligadb"            # Test: 306 Spiele, 100 % mit Uhrzeit
+shortcut = "bl1"
+season = 2026
+min_matches = 306
+[[calendars.sources]]
+kind = "openfootball_json"
+url = "https://raw.githubusercontent.com/openfootball/football.json/master/2026-27/de.1.json"
+tz = "Europe/Berlin"
+
+[[calendars]]
+id = "la-liga"
+title = "La Liga"
+name = "La Liga"
+tag = "LL"
+required = true
+[[calendars.sources]]
+kind = "openligadb"            # Test: 380 Spiele, 99 % mit Uhrzeit
+shortcut = "la1"
+season = 2026
+min_matches = 380
+[[calendars.sources]]
+kind = "openfootball_json"
+url = "https://raw.githubusercontent.com/openfootball/football.json/master/2026-27/es.1.json"
+tz = "Europe/Madrid"
+
+[[calendars]]
+id = "ligue-1"
+title = "Ligue 1"
+name = "Ligue 1"
+tag = "L1"
+required = true
+# Keine Ligue 1 bei OpenLigaDB. Ohne Token: openfootball (meist ohne Uhrzeit).
+[[calendars.sources]]
+kind = "football_data"
+code = "FL1"
+season = 2026
+min_matches = 306
+[[calendars.sources]]
+kind = "openfootball_json"
+url = "https://raw.githubusercontent.com/openfootball/football.json/master/2026-27/fr.1.json"
+tz = "Europe/Paris"
+
+[[calendars]]
+id = "champions-league"
+title = "Champions League"
+name = "Champions League"
+tag = "CL"
+european = true
+[[calendars.sources]]
+kind = "uefa"
+label = "UEFA-API CL"
+competition_id = 1
+season_year = 2027             # UEFA zaehlt das Endjahr: 2027 = Saison 2026/27
+expect = "champions league"
+exclude_phases = ["qualif", "prelim"]   # Qualifikation Juli/August raus
+min_matches = 144
+[[calendars.sources]]
+kind = "openligadb"            # Test: 144 Spiele (Ligaphase komplett)
+shortcut = "ucl"
+season = 2026
+min_matches = 144
+[[calendars.sources]]
+kind = "openligadb"            # Test: nur 32 Spiele, unvollstaendig
+shortcut = "ucl2026"
+season = 2026
+min_matches = 144
+[[calendars.sources]]
+kind = "football_data"
+code = "CL"
+season = 2026
+min_matches = 144
+
+[[calendars]]
+id = "europa-league"
+title = "Europa League"
+name = "Europa League"
+tag = "EL"
+european = true
+[[calendars.sources]]
+kind = "uefa"
+label = "UEFA-API EL"
+competition_id = 14            # bestaetigt: 14 = UEFA Europa League (3 = EM)
+season_year = 2027
+expect = "europa league"
+exclude_phases = ["qualif", "prelim"]
+min_matches = 144
+[[calendars.sources]]
+kind = "openligadb"            # Test: 144 Spiele
+shortcut = "uel2026"
+season = 2026
+min_matches = 144
+
+[[calendars]]
+id = "laenderspiele"
+title = "Laenderspiele"
+name = "Laenderspiele"
+tag = "LS"
+kind = "national"
+merge = true
+# UEFA-Quellen nutzen alle englische Namen, Dubletten werden sauber erkannt.
+[[calendars.sources]]
+kind = "uefa"
+label = "UEFA-API Nations League"
+competition_id = 2014          # Test: 156 Spiele (Ligen A-D)
+season_year = 2027
+expect = "nations league"
+[[calendars.sources]]
+kind = "uefa"
+label = "UEFA-API EM-Quali 2028"
+competition_id = 3
+season_year = 2028
+expect = "european championship"
+only_phases = ["qualif"]
+[[calendars.sources]]
+kind = "uefa"
+label = "UEFA-API WM-Quali 2030"
+competition_id = 17
+season_year = 2030
+expect = "world cup"
+only_phases = ["qualif"]
+# Nur wenn die UEFA-API ausfaellt (deutsche Namen, nur Liga A + DFB):
+[[calendars.sources]]
+kind = "openligadb"
+shortcut = "nla"
+season = 2026
+fallback = true
+[[calendars.sources]]
+kind = "openligadb"
+shortcut = "DFBN"
+season = 2026
+fallback = true
+
+[[calendars]]
+id = "em"
+title = "Europameisterschaft"
+name = "Europameisterschaft"
+tag = "EM"
+kind = "national"
+[[calendars.sources]]
+kind = "uefa"
+label = "UEFA-API EM 2028"
+competition_id = 3
+season_year = 2028
+expect = "european championship"
+exclude_phases = ["qualif"]
+[[calendars.sources]]
+kind = "openfootball_json"
+url = "https://raw.githubusercontent.com/openfootball/euro.json/master/2028/euro.json"
+tz = "Europe/Berlin"
+
+[[calendars]]
+id = "wm"
+title = "Weltmeisterschaft"
+name = "Weltmeisterschaft"
+tag = "WM"
+kind = "national"
+[[calendars.sources]]
+kind = "uefa"
+label = "UEFA-API WM 2030"
+competition_id = 17
+season_year = 2030
+expect = "world cup"
+exclude_phases = ["qualif"]
+[[calendars.sources]]
+kind = "openfootball_json"
+url = "https://raw.githubusercontent.com/openfootball/worldcup.json/master/2030/worldcup.json"
+tz = "Europe/Berlin"

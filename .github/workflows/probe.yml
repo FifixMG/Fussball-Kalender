@@ -1,0 +1,28 @@
+name: Quellen pruefen
+
+on:
+  workflow_dispatch:
+    inputs:
+      quick:
+        description: "Nur aktuelle Saison"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Quellen abfragen
+        env:
+          FOOTBALL_DATA_TOKEN: ${{ secrets.FOOTBALL_DATA_TOKEN }}
+        run: python probe_sources.py ${{ inputs.quick && '--quick' || '' }} | tee probe.txt
+      - name: Ergebnis in Job-Zusammenfassung
+        run: |
+          { echo '```'; cat probe.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
