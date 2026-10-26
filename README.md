@@ -4,16 +4,6 @@ Erzeugt ICS-Feeds (Bundesliga, La Liga, Ligue 1, Champions League, Europa League
 Laenderspiele, EM, WM und "Top-Spiele") und veroeffentlicht sie per GitHub Pages.
 Nur Python-Standardbibliothek, kein Tracking, keine externen Ressourcen auf der Index-Seite.
 
-## Einrichten
-
-1. Repo auf GitHub anlegen (muss oeffentlich sein, Pages aus privaten Repos braucht einen Bezahlplan), Dateien pushen auf `main`.
-2. Settings > Pages > Source: **GitHub Actions**.
-3. Optional fuer Champions League / Europa League: kostenlosen API-Key bei football-data.org holen
-   und als Secret `FOOTBALL_DATA_TOKEN` hinterlegen (Settings > Secrets and variables > Actions).
-4. Actions > "Kalender bauen und veroeffentlichen" > Run workflow.
-5. Auf dem Handy in ICSx5 jede gewuenschte URL aus `https://<user>.github.io/<repo>/` abonnieren,
-   z.B. `top-spiele.ics`, `champions-league.ics`. Je Feed ein eigener Kalender, in Fossify ein- und ausblendbar.
-
 ## Filter
 
 - Wettbewerbs-Filter = eigene Kalender (je eine `.ics`).
